@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Properties File Validator</title>
+    <link rel="stylesheet" href="common.css">
+</head>
+<body>
+    <h1>Properties File Validator</h1>
+    <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
+    <div class="container">
+        <div class="panel">
+            <textarea id="propertiesInput" placeholder="Enter properties file content here..."></textarea>
+        </div>
+    </div>
+    <div id="result" class="result"></div>
+    <script src="common.js"></script>
+    <script>
+        // Set sample properties
+        document.getElementById('propertiesInput').value = `# Application Configuration
+app.name=My Awesome App
+app.version=1.0.0
+app.author=Developer
+
+# Database Settings
+db.host=localhost
+db.port=3306
+db.name=myapp_db
+db.username=admin
+db.password=secret123
+`;
+        // ...existing code...
+db.username=admin
+db.password=secret123
+
+# Server Configuration
+server.port=8080
+server.host=0.0.0.0
+server.debug=true`;
+
+        function toggleTheme() {
+            isDark = !isDark;
+            const root = document.documentElement;
+            if (isDark) {
+                root.style.setProperty('--bg-color', '#121212');
+                root.style.setProperty('--text-color', '#ffffff');
+                root.style.setProperty('--input-bg', '#1e1e1e');
+                root.style.setProperty('--button-bg', '#333333');
+                root.style.setProperty('--button-hover', '#555555');
+                root.style.setProperty('--button-text', '#ffffff');
+            } else {
+                root.style.setProperty('--bg-color', '#ffffff');
+                root.style.setProperty('--text-color', '#000000');
+                root.style.setProperty('--input-bg', '#f0f0f0');
+                root.style.setProperty('--button-bg', '#cccccc');
+                root.style.setProperty('--button-hover', '#aaaaaa');
+                root.style.setProperty('--button-text', '#000000');
+            }
+        }
+
+        function validateProperties() {
+            const propertiesText = document.getElementById('propertiesInput').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (!propertiesText.trim()) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Please enter properties content to validate.';
+                return;
+            }
+
+            const lines = propertiesText.split('\n');
+            const errors = [];
+            const keys = new Set();
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                const lineNumber = i + 1;
+
+                if (line === '' || line.startsWith('#')) {
+                    continue; // Empty lines and comments are allowed
+                }
+
+                const equalIndex = line.indexOf('=');
+                if (equalIndex === -1) {
+                    errors.push(`Line ${lineNumber}: Missing '=' separator`);
+                    continue;
+                }
+
+                const key = line.substring(0, equalIndex).trim();
+                const value = line.substring(equalIndex + 1).trim();
+
+                if (key === '') {
+                    errors.push(`Line ${lineNumber}: Empty key`);
+                }
+
+                if (keys.has(key)) {
+                    errors.push(`Line ${lineNumber}: Duplicate key '${key}'`);
+                } else {
+                    keys.add(key);
+                }
+            }
+
+            if (errors.length === 0) {
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `Properties file is valid!\nFound ${keys.size} unique keys.`;
+            } else {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Validation errors:\n' + errors.join('\n');
+            }
+        }
+
+        // Apply dark theme by default
+        toggleTheme();
+    </script>
+</body>
+</html>

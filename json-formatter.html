@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Formatter</title>
+    <link rel="stylesheet" href="common.css">
+</head>
+<body>
+    <h1>JSON Formatter</h1>
+    <div class="controls">
+        <button onclick="toggleTheme()">Toggle Theme</button>
+        <button onclick="formatJson()">Format JSON</button>
+    </div>
+    <div class="container">
+        <div class="panel">
+            <h2>Input</h2>
+            <textarea id="input" placeholder="Paste your JSON here..."></textarea>
+        </div>
+        <div class="panel">
+            <h2>Output</h2>
+            <textarea id="output" placeholder="Formatted JSON will appear here..." readonly></textarea>
+        </div>
+    </div>
+    <div id="error" class="error"></div>
+
+    <script src="common.js"></script>
+    <script>
+        // Set sample JSON
+        document.getElementById('input').value = '{"name":"John","age":30,"city":"New York","hobbies":["reading","coding","gaming"],"address":{"street":"123 Main St","zip":"10001"}}';
+
+        function formatJson() {
+            const input = document.getElementById('input').value;
+            const output = document.getElementById('output');
+            const error = document.getElementById('error');
+            error.textContent = '';
+            try {
+                const parsed = JSON.parse(input);
+                output.value = JSON.stringify(parsed, null, 4);
+            } catch (e) {
+                error.textContent = 'Invalid JSON: ' + e.message;
+                output.value = '';
+            }
+        }
+    </script>
+</body>
+</html>

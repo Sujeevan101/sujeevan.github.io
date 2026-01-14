@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON-XML Converter</title>
+    <link rel="stylesheet" href="common.css">
+</head>
+<body>
+    <h1>JSON-XML Converter</h1>
+    <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
+    <div class="container">
+        <div class="panel">
+            <h2>JSON Input</h2>
+            <textarea id="jsonInput" placeholder="Enter JSON here..."></textarea>
+            <button onclick="jsonToXml()">JSON to XML</button>
+        </div>
+        <div class="panel">
+            <h2>XML Input</h2>
+            <textarea id="xmlInput" placeholder="Enter XML here..."></textarea>
+            <button onclick="xmlToJson()">XML to JSON</button>
+        </div>
+    </div>
+    <div id="result" class="result"></div>
+    <script src="common.js"></script>
+    <script>
+        // Set sample JSON
+        document.getElementById('jsonInput').value = JSON.stringify({
+            bookstore: {
+                book: [
+                    {
+                        "@category": "fiction",
+                        title: "The Great Gatsby",
+                        author: "F. Scott Fitzgerald",
+                        year: 1925,
+                        price: 29.99
+                    },
+                    {
+                        "@category": "non-fiction",
+                        title: "Steve Jobs",
+                        author: "Walter Isaacson",
+                        year: 2011,
+                        price: 39.99
+                    }
+                ]
+            }
+        }, null, 2);
+
+        // Set sample XML
+        document.getElementById('xmlInput').value = `<?xml version="1.0" encoding="UTF-8"?>
+<bookstore>
+  <book category="fiction">
+    <title>The Great Gatsby</title>
+    <author>F. Scott Fitzgerald</author>
+    <year>1925</year>
+    <price>29.99</price>
+  </book>
+  <book category="non-fiction">
+    <title>Steve Jobs</title>
+    <author>Walter Isaacson</author>
+    <year>2011</year>
+    <price>39.99</price>
+  </book>
+</bookstore>`;
+                root.style.setProperty('--button-bg', '#cccccc');
+                root.style.setProperty('--button-hover', '#aaaaaa');
+                root.style.setProperty('--button-text', '#000000');
+            }
+        }
+
+        function jsonToXml() {
+            const jsonText = document.getElementById('jsonInput').value;
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                const obj = JSON.parse(jsonText);
+                const xml = jsonToXmlString(obj);
+                document.getElementById('xmlInput').value = xml;
+                resultDiv.className = 'result';
+                resultDiv.textContent = 'Conversion successful!';
+            } catch (e) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Error converting JSON to XML: ' + e.message;
+            }
+        }
+
+        function xmlToJson() {
+            const xmlText = document.getElementById('xmlInput').value;
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                const obj = xmlToJsonObject(xmlText);
+                const json = JSON.stringify(obj, null, 2);
+                document.getElementById('xmlInput').value = json;
+                resultDiv.className = 'result';
+                resultDiv.textContent = 'Conversion successful!';
+            } catch (e) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Error converting XML to JSON: ' + e.message;
+            }
+        }
+
+        function jsonToXmlString(obj, rootName = 'root', indent = 0) {
+            const indentStr = '  '.repeat(indent);
+            const nextIndentStr = '  '.repeat(indent + 1);
+            let xml = `\n${nextIndentStr}`;
+            
+            for (let prop in obj) {
+                if (obj.hasOwnProperty(prop)) {
+                    if (Array.isArray(obj[prop])) {
+                        obj[prop].forEach(item => {
+                            xml += `<${prop}>${typeof item === 'object' ? jsonToXmlString(item, prop, indent + 1) : item}</${prop}>\n${nextIndentStr}`;
+                        });
+                    } else if (typeof obj[prop] === 'object') {
+                        xml += `<${prop}>${jsonToXmlString(obj[prop], prop, indent + 1)}</${prop}>\n${nextIndentStr}`;
+                    } else {
+                        xml += `<${prop}>${obj[prop]}</${prop}>\n${nextIndentStr}`;
+                    }
+                }
+            }
+            xml = xml.slice(0, -nextIndentStr.length - 1); // Remove last newline and indent
+            return `${indentStr}<${rootName}>${xml}\n${indentStr}</${rootName}>`;
+        }
+
+        function xmlToJsonObject(xml) {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xml, 'text/xml');
+            const parseError = xmlDoc.getElementsByTagName('parsererror');
+            if (parseError.length > 0) {
+                throw new Error('Invalid XML: ' + parseError[0].textContent);
+            }
+            return xmlToJson(xmlDoc.documentElement);
+        }
+
+        function xmlToJson(node) {
+            if (node.nodeType === 3) return node.nodeValue;
+            if (node.nodeType !== 1) return null;
+
+            let obj = {};
+            if (node.attributes.length > 0) {
+                obj['@attributes'] = {};
+                for (let i = 0; i < node.attributes.length; i++) {
+                    const attr = node.attributes[i];
+                    obj['@attributes'][attr.name] = attr.value;
+                }
+            }
+
+            let textContent = '';
+            for (let i = 0; i < node.childNodes.length; i++) {
+                const child = node.childNodes[i];
+                if (child.nodeType === 3) {
+                    textContent += child.nodeValue;
+                } else if (child.nodeType === 1) {
+                    const childObj = xmlToJson(child);
+                    if (childObj !== null) {
+                        if (obj[child.nodeName]) {
+                            if (!Array.isArray(obj[child.nodeName])) {
+                                obj[child.nodeName] = [obj[child.nodeName]];
+                            }
+                            obj[child.nodeName].push(childObj);
+                        } else {
+                            obj[child.nodeName] = childObj;
+                        }
+                    }
+                }
+            }
+
+            if (textContent.trim() && Object.keys(obj).length === 0) {
+                return textContent.trim();
+            } else if (textContent.trim()) {
+                obj['#text'] = textContent.trim();
+            }
+
+            return obj;
+        }
+
+       
+    </script>
+</body>
+</html>

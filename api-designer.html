@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Designer</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.10.3/swagger-ui.css" />
+    <link rel="stylesheet" href="common.css">
+</head>
+<body>
+    <h1>API Designer</h1>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('openapi')">OpenAPI</div>
+    </div>
+    <div class="controls">
+        <select id="template" onchange="loadTemplate()">
+            <option value="">Select Template</option>
+            <option value="oas3.0">OAS 3.0</option>
+            <option value="swagger2">Swagger 2.0</option>
+        </select>
+        <input type="url" id="importUrl" placeholder="Import from URL">
+        <button onclick="importFromUrl()">Import</button>
+        <input type="file" id="fileInput" accept=".yaml,.json" onchange="importFromFile()">
+        
+            <select id="exportFormat">
+                <option value="yaml">YAML</option>
+                <option value="json">JSON</option>
+            </select>
+            <button onclick="downloadSpec()">Download</button>
+        
+        <button onclick="copySpec()">Copy</button>
+        <button onclick="formatSpec()">Format</button>
+        <button onclick="toggleTheme()">Toggle Theme</button>
+        <button onclick="validateSpec()">Validate</button>
+    </div>
+    <div id="errors" class="errors" style="display: none;"></div>
+    <div class="container">
+        <div class="editor">
+            <textarea id="spec" placeholder="Write your OpenAPI specification here..."></textarea>
+        </div>
+        <div class="resizer" id="resizer"></div>
+        <div class="preview" id="preview">
+            <div class="preview-header">
+                <div id="stats">Resources: 0 | Endpoints: 0</div>
+                <div>
+                    <button onclick="expandAll()">Expand All</button>
+                    <button onclick="collapseAll()">Collapse All</button>
+                </div>
+            </div>
+            <div style="padding: 20px; text-align: center; color: #cccccc;">Preview will appear here</div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/swagger-ui-dist@5.10.3/swagger-ui-bundle.js"></script>
+    <script src="common.js"></script>
+    <script>
+        let ui;
+        let isDark = true;
+        let currentFormat = 'openapi';
+
+        // Add event listeners
+        document.getElementById('template').addEventListener('change', loadTemplate);
+        document.getElementById('spec').addEventListener('input', previewSpec);
+
+        // Load default sample spec
+        loadTemplate();
+
+        function switchTab(format) {
+            currentFormat = format;
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('preview').innerHTML = '<div class="preview-header"><div id="stats">Resources: 0 | Endpoints: 0</div><div><button onclick="expandAll()">Expand All</button><button onclick="collapseAll()">Collapse All</button></div></div><div style="padding: 20px; text-align: center; color: #cccccc;">Preview will appear here</div>';
+        }
+
+        function loadTemplate() {
+            const template = document.getElementById('template').value;
+            let spec = '';
+            if (template === 'oas3.0') {
+                spec = `openapi: 3.0.0
+info:
+  title: My API
+  version: 1.0.0
+servers:
+  - url: https://api.example.com/v1
+paths:
+  /users:
+    get:
+      summary: Get all users
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Maximum number of users to return
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      summary: Create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  /users/{userId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          description: User identifier
+    get:
+      summary: Get user by ID
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    put:
+      summary: Update user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    delete:
+      summary: Delete user
+      responses:
+        '204':
+          description: User deleted
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string`;
+            } else if (template === 'swagger2') {
+                spec = `swagger: "2.0"
+info:
+  title: My API
+  version: 1.0.0
+host: api.example.com
+basePath: /v1
+schemes:
+  - https
+paths:
+  /users:
+    get:
+      summary: Get all users
+      parameters:
+        - name: limit
+          in: query
+          type: integer
+          default: 10
+          description: Maximum number of users to return
+        - name: offset
+          in: query
+          type: integer
+          default: 0
+      responses:
+        200:
+          description: A list of users
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+    post:
+      summary: Create a new user
+      parameters:
+        - name: user
+          in: body
+          schema:
+            $ref: '#/definitions/User'
+      responses:
+        201:
+          description: User created
+          schema:
+            $ref: '#/definitions/User'
+  /users/{userId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        type: integer
+        description: User identifier
+    get:
+      summary: Get user by ID
+      responses:
+        200:
+          description: User details
+          schema:
+            $ref: '#/definitions/User'
+        404:
+          description: User not found
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+    put:
+      summary: Update user
+      parameters:
+        - name: user
+          in: body
+          schema:
+            $ref: '#/definitions/User'
+      responses:
+        200:
+          description: User updated
+          schema:
+            $ref: '#/definitions/User'
+    delete:
+      summary: Delete user
+      responses:
+        204:
+          description: User deleted
+definitions:
+  User:
+    type: object
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      email:
+        type: string`;
+            }
+            if (true) {
+                const specTextarea = document.getElementById('spec');
+                specTextarea.value = spec;
+                previewSpec();
+            } else {
+                showError('Editor not initialized. Please refresh the page.');
+            }
+        }
+
+        function importFromUrl() {
+            const url = document.getElementById('importUrl').value;
+            if (url) {
+                fetch(url)
+                    .then(response => response.text())
+                    .then(text => {
+                    if (true) {
+                        const specTextarea = document.getElementById('spec');
+                        specTextarea.value = text;
+                        previewSpec();
+                    } else {
+                        showError('Editor not initialized. Please refresh the page.');
+                    }
+                    })
+                    .catch(err => showError('Failed to import from URL: ' + err.message));
+            }
+        }
+
+        function importFromFile() {
+            const file = document.getElementById('fileInput').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    if (true) {
+                        const specTextarea = document.getElementById('spec');
+                        specTextarea.value = e.target.result;
+                        previewSpec();
+                    } else {
+                        showError('Editor not initialized. Please refresh the page.');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function copySpec() {
+            if (true) {
+                const spec = document.getElementById('spec').value;
+                navigator.clipboard.writeText(spec).then(() => {
+                    alert('Specification copied to clipboard!');
+                });
+            } else {
+                showError('Editor not initialized. Please refresh the page.');
+            }
+        }
+
+        function downloadSpec() {
+            if (true) {
+                const spec = document.getElementById('spec').value;
+                const format = document.getElementById('exportFormat').value;
+                let content = spec;
+                if (format === 'json') {
+                    try {
+                        const specObj = jsyaml.load(spec);
+                        content = JSON.stringify(specObj, null, 2);
+                    } catch (e) {
+                        showError('Invalid YAML for JSON conversion: ' + e.message);
+                        return;
+                    }
+                }
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `api-spec.${format}`;
+                a.click();
+                URL.revokeObjectURL(url);
+            } else {
+                showError('Editor not initialized. Please refresh the page.');
+            }
+        }
+
+        function toggleTheme() {
+    isDark = !isDark;
+    const root = document.documentElement;
+
+    if (isDark) {
+        root.style.setProperty('--bg-color', '#121212');
+        root.style.setProperty('--text-color', '#ffffff');
+        root.style.setProperty('--input-bg', '#333333');
+        root.style.setProperty('--select-bg', '#333333');
+
+        root.style.setProperty('--tab-bg', '#1e1e1e');
+        root.style.setProperty('--tab-active', '#333333');
+        root.style.setProperty('--tab-border', '#444444');
+
+        root.style.setProperty('--button-bg', '#333333');
+        root.style.setProperty('--button-hover', '#555555');
+        root.style.setProperty('--button-text', '#ffffff');
+    } else {
+        root.style.setProperty('--bg-color', '#ffffff');
+        root.style.setProperty('--text-color', '#000000');
+        root.style.setProperty('--input-bg', '#cccccc');
+        root.style.setProperty('--select-bg', '#cccccc');
+
+        root.style.setProperty('--tab-bg', '#e0e0e0');
+        root.style.setProperty('--tab-active', '#cccccc');
+        root.style.setProperty('--tab-border', '#bbbbbb');
+
+        root.style.setProperty('--button-bg', '#cccccc');
+        root.style.setProperty('--button-hover', '#aaaaaa');
+        root.style.setProperty('--button-text', '#000000');
+    }
+}
+
+        function formatSpec() {
+            const specTextarea = document.getElementById('spec');
+            const spec = specTextarea.value;
+            try {
+                const obj = jsyaml.load(spec);
+                const formatted = jsyaml.dump(obj, { indent: 2 });
+                specTextarea.value = formatted;
+                previewSpec();
+                hideError();
+            } catch (e) {
+                showError('Invalid YAML for formatting: ' + e.message);
+            }
+        }
+
+        function previewSpec() {
+            if (true) {
+                const spec = document.getElementById('spec').value;
+                const preview = document.getElementById('preview');
+                try {
+                    const specObj = jsyaml.load(spec);
+                    let resourceCount = 0;
+                    let endpointCount = 0;
+                    if (specObj.paths) {
+                        resourceCount = Object.keys(specObj.paths).length;
+                        for (let path in specObj.paths) {
+                            endpointCount += Object.keys(specObj.paths[path]).length;
+                        }
+                    }
+                    document.getElementById('stats').textContent = `Resources: ${resourceCount} | Endpoints: ${endpointCount}`;
+                    preview.innerHTML = '<div class="preview-header"><div id="stats">Resources: ' + resourceCount + ' | Endpoints: ' + endpointCount + '</div><div><button onclick="expandAll()">Expand All</button><button onclick="collapseAll()">Collapse All</button></div></div><div id="swagger-ui"></div>';
+                    ui = SwaggerUIBundle({
+                        spec: specObj,
+                        dom_id: '#swagger-ui',
+                        presets: [
+                            SwaggerUIBundle.presets.apis,
+                            SwaggerUIBundle.presets.standalone
+                        ]
+                    });
+                    hideError();
+                } catch (e) {
+                    document.getElementById('stats').textContent = 'Resources: 0 | Endpoints: 0';
+                    preview.innerHTML = '<div class="preview-header"><div id="stats">Resources: 0 | Endpoints: 0</div><div><button onclick="expandAll()">Expand All</button><button onclick="collapseAll()">Collapse All</button></div></div><div style="padding: 20px; color: red;">Invalid OpenAPI spec: ' + e.message + '</div>';
+                }
+            }
+        }
+
+        function expandAll() {
+            document.querySelectorAll('.opblock:not(.is-open) .opblock-summary-control').forEach(btn => {
+                btn.click();
+            });
+        }
+
+        function collapseAll() {
+            document.querySelectorAll('.opblock.is-open .opblock-summary-control').forEach(btn => {
+                btn.click();
+            });
+        }
+
+        function showError(message) {
+            const errors = document.getElementById('errors');
+            errors.textContent = message;
+            errors.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('errors').style.display = 'none';
+        }
+
+        // Resizer functionality
+        const resizer = document.getElementById('resizer');
+        const editorPane = document.querySelector('.editor');
+        const previewPane = document.querySelector('.preview');
+        let isResizing = false;
+
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            const container = document.querySelector('.container');
+            const containerRect = container.getBoundingClientRect();
+            const newEditorWidth = e.clientX - containerRect.left;
+            const totalWidth = containerRect.width;
+            const editorPercent = (newEditorWidth / totalWidth) * 100;
+            if (editorPercent > 20 && editorPercent < 80) {
+                editorPane.style.flex = `0 0 ${editorPercent}%`;
+                previewPane.style.flex = `0 0 ${100 - editorPercent}%`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isResizing = false;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        });
+
+        // Apply dark theme by default
+        toggleTheme();
+    </script>
+    <script src="https://unpkg.com/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timestamp Converter</title>
+    <link rel="stylesheet" href="common.css">
+</head>
+<body>
+    <h1>Timestamp Converter</h1>
+    <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
+    <div class="container">
+        <div class="panel">
+            <div class="input-group">
+                <input type="text" id="timestampInput" placeholder="Enter timestamp (Unix, ISO, etc.)">
+                <select id="inputFormat">
+                    <option value="auto">Auto Detect</option>
+                    <option value="unix">Unix Timestamp</option>
+                    <option value="iso">ISO 8601</option>
+                    <option value="date">Date String</option>
+                </select>
+            </div>
+            <button onclick="convertTimestamp()">Convert</button>
+            <div id="result" class="result"></div>
+        </div>
+    </div>
+    <script src="common.js"></script>
+    <script>
+        // Set sample timestamp
+        document.getElementById('timestampInput').value = '1640995200'; // Unix timestamp for 2022-01-01
+        // ...existing code...
+
+        function convertTimestamp() {
+            const input = document.getElementById('timestampInput').value.trim();
+            const format = document.getElementById('inputFormat').value;
+            const resultDiv = document.getElementById('result');
+
+            if (!input) {
+                resultDiv.textContent = 'Please enter a timestamp.';
+                return;
+            }
+
+            let date;
+            try {
+                if (format === 'unix' || (format === 'auto' && /^\d+$/.test(input))) {
+                    // Unix timestamp (seconds or milliseconds)
+                    const num = parseInt(input);
+                    date = new Date(num > 1e10 ? num : num * 1000);
+                } else if (format === 'iso' || (format === 'auto' && input.includes('T'))) {
+                    // ISO 8601
+                    date = new Date(input);
+                } else {
+                    // Date string
+                    date = new Date(input);
+                }
+
+                if (isNaN(date.getTime())) {
+                    throw new Error('Invalid timestamp format');
+                }
+
+                const unixSeconds = Math.floor(date.getTime() / 1000);
+                const unixMillis = date.getTime();
+                const iso = date.toISOString();
+                const local = date.toLocaleString();
+                const utc = date.toUTCString();
+
+                resultDiv.innerHTML = `
+                    <strong>Unix Timestamp (seconds):</strong> ${unixSeconds}<br>
+                    <strong>Unix Timestamp (milliseconds):</strong> ${unixMillis}<br>
+                    <strong>ISO 8601:</strong> ${iso}<br>
+                    <strong>Local Date/Time:</strong> ${local}<br>
+                    <strong>UTC Date/Time:</strong> ${utc}
+                `;
+            } catch (e) {
+                resultDiv.textContent = 'Error: ' + e.message;
+            }
+        }
+
+        // Apply dark theme by default
+        toggleTheme();
+    </script>
+</body>
+</html>
