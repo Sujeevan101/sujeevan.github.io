@@ -3,50 +3,220 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home Page</title>
+    <title>SI Dev tools</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="common.css">
-           
+    <style>
+        :root {
+            --bg-color: #121212;
+            --text-color: #ffffff;
+            --input-bg: #1e1e1e;
+            --input-border: #333333;
+            --button-bg: #333333;
+            --button-hover: #555555;
+            --button-text: #ffffff;
+            --error-color: #ff6b6b;
+            --header-bg: #181818;
+            --header-border: #222;
+            --header-icon: #00bfff;
+            --header-hover: #333;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            text-align: center;
+            padding: 50px;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .header {
+            width: 100vw;
+            min-width: 100vw;
+            background: var(--header-bg);
+            border-bottom: 1px solid var(--header-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            height: 56px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            box-sizing: border-box;
+        }
+        .header .header-left {
+            display: flex;
+            align-items: center;
+        }
+        .header .header-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-left: 10px;
+            color: var(--text-color);
+            letter-spacing: 1px;
+        }
+        .header .header-icon {
+            color: var(--header-icon);
+            font-size: 2em;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .header .header-icon:hover {
+            color: var(--button-hover);
+        }
+        .header .header-link {
+            color: var(--text-color);
+            font-size: 2em;
+            margin-left: 18px;
+            margin-right: 0;
+            transition: color 0.2s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            height: 56px;
+        }
+        .header .header-link i {
+            display: block;
+            font-size: 1em;
+        }
+        .header .header-link:hover {
+            color: #0a66c2;
+        }
+        .main-content {
+            margin-top: 80px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #00bfff;
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        p {
+            font-size: 1.2em;
+            margin-bottom: 40px;
+        }
+        .tiles {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            max-width: 1000px;
+            width: 100%;
+        }
+        .tile {
+            background-color: var(--tile-bg);
+            color: var(--tile-text);
+            padding: 30px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            position: relative;
+            text-align: center;
+        }
+        .tile:hover {
+            background-color: var(--tile-hover);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+        }
+        .tile i {
+            font-size: 3em;
+            margin-bottom: 15px;
+            display: block;
+        }
+        .tile p {
+            margin: 0;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .tile .tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+            pointer-events: none;
+        }
+        .tile:hover .tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+        .tile .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: rgba(0,0,0,0.8);
+        }
     </style>
 </head>
 <body>
-    <h1>Welcome to my Dev tools</h1>
-    <p>Select a tool below:</p>
-    <div class="tiles">
-        <div class="tile" onclick="window.location.href='json-formatter.html'">
-            <i class="fas fa-code"></i>
-            <p>JSON Formatter</p>
-            <span class="tooltip">Format and validate JSON data</span>
+    <div class="header">
+        <div class="header-left">
+            <i class="fas fa-tools header-icon" onclick="window.location.href='index.html'" title="Dev Tools Home"></i>
+            <span class="header-title">SI Dev Tools</span>
         </div>
-        <div class="tile" onclick="window.location.href='api-designer.html'">
-            <i class="fas fa-cogs"></i>
-            <p>API Designer</p>
-            <span class="tooltip">Design and preview OpenAPI specifications</span>
-        </div>
-        <div class="tile" onclick="window.location.href='xml-validator.html'">
-            <i class="fas fa-file-code"></i>
-            <p>XML Validator</p>
-            <span class="tooltip">Validate XML syntax and structure</span>
-        </div>
-        <div class="tile" onclick="window.location.href='json-xml-converter.html'">
-            <i class="fas fa-exchange-alt"></i>
-            <p>JSON-XML Converter</p>
-            <span class="tooltip">Convert between JSON and XML formats</span>
-        </div>
-        <div class="tile" onclick="window.location.href='properties-validator.html'">
-            <i class="fas fa-file-alt"></i>
-            <p>Properties Validator</p>
-            <span class="tooltip">Validate Java properties file format</span>
-        </div>
-        <div class="tile" onclick="window.location.href='timestamp-converter.html'">
-            <i class="fas fa-clock"></i>
-            <p>Timestamp Converter</p>
-            <span class="tooltip">Convert between different timestamp formats</span>
-        </div>
-        <div class="tile" onclick="window.location.href='text-diff-checker.html'">
-            <i class="fas fa-not-equal"></i>
-            <p>Text Diff Checker</p>
-            <span class="tooltip">Compare and highlight differences between texts</span>
+        <a class="header-link" href="https://www.linkedin.com/in/sujeevan-ilanthirayan" target="_blank" title="My LinkedIn">
+            <i class="fab fa-linkedin"></i>
+        </a>
+    </div>
+    <div class="main-content">
+        <h1>SI Dev tools</h1>
+        <p>Pick a tool below:</p>
+        <div class="tiles">
+            <div class="tile" onclick="window.location.href='json-formatter.html'">
+                <i class="fas fa-code"></i>
+                <p>JSON Formatter</p>
+                <span class="tooltip">Format and validate JSON data</span>
+            </div>
+            <div class="tile" onclick="window.location.href='api-designer.html'">
+                <i class="fas fa-cogs"></i>
+                <p>API Designer</p>
+                <span class="tooltip">Design and preview OpenAPI specifications</span>
+            </div>
+            <div class="tile" onclick="window.location.href='xml-validator.html'">
+                <i class="fas fa-file-code"></i>
+                <p>XML Validator</p>
+                <span class="tooltip">Validate XML syntax and structure</span>
+            </div>
+            <div class="tile" onclick="window.location.href='json-xml-converter.html'">
+                <i class="fas fa-exchange-alt"></i>
+                <p>JSON-XML Converter</p>
+                <span class="tooltip">Convert between JSON and XML formats</span>
+            </div>
+            <div class="tile" onclick="window.location.href='properties-validator.html'">
+                <i class="fas fa-file-alt"></i>
+                <p>Properties Validator</p>
+                <span class="tooltip">Validate Java properties file format</span>
+            </div>
+            <div class="tile" onclick="window.location.href='timestamp-converter.html'">
+                <i class="fas fa-clock"></i>
+                <p>Timestamp Converter</p>
+                <span class="tooltip">Convert between different timestamp formats</span>
+            </div>
+            <div class="tile" onclick="window.location.href='text-diff-checker.html'">
+                <i class="fas fa-not-equal"></i>
+                <p>Text Diff Checker</p>
+                <span class="tooltip">Compare and highlight differences between texts</span>
+            </div>
         </div>
     </div>
 </body>
